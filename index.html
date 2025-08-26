@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desktop Todo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <h1 id="app-title">Todo List</h1>
+                <nav class="nav-tabs">
+                    <button class="nav-tab active" data-type="regular">Regular</button>
+                    <button class="nav-tab" data-type="daily">Daily</button>
+                </nav>
+            </div>
+            <div class="settings">
+                <div class="backup-controls">
+                    <button id="export-btn" class="backup-btn" title="Export todos to file">💾</button>
+                    <button id="import-btn" class="backup-btn" title="Import todos from file">📂</button>
+                    <button id="backup-btn" class="backup-btn" title="Create quick backup">🔄</button>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="autostart-toggle">
+                    <span class="slider"></span>
+                    <span class="label">Auto-start</span>
+                </label>
+            </div>
+        </header>
+
+        <div class="input-section">
+            <input type="text" id="todo-input" placeholder="Add a new todo..." />
+            <button id="add-btn">+</button>
+        </div>
+
+        <div class="todos-section">
+            <ul id="todos-list"></ul>
+        </div>
+
+        <div class="stats">
+            <span id="total-count">0 todos</span>
+            <span id="completed-count">0 completed</span>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
