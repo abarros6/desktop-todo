@@ -14,25 +14,53 @@
                 <nav class="nav-tabs">
                     <button class="nav-tab active" data-type="regular">Regular</button>
                     <button class="nav-tab" data-type="daily">Daily</button>
+                    <button class="nav-tab" data-type="focus">Focus</button>
                 </nav>
             </div>
             <div class="settings">
-                <div class="backup-controls">
-                    <button id="export-btn" class="backup-btn" title="Export todos to file">💾</button>
-                    <button id="import-btn" class="backup-btn" title="Import todos from file">📂</button>
-                    <button id="backup-btn" class="backup-btn" title="Create quick backup">🔄</button>
+                <div class="dropdown">
+                    <button id="menu-btn" class="menu-btn" title="Menu">⋯</button>
+                    <div id="dropdown-menu" class="dropdown-menu">
+                        <button id="help-btn" class="dropdown-item">❓ Help</button>
+                        <button id="export-btn" class="dropdown-item">💾 Export</button>
+                        <button id="import-btn" class="dropdown-item">📂 Import</button>
+                        <button id="backup-btn" class="dropdown-item">🔄 Backup</button>
+                    </div>
                 </div>
-                <label class="toggle">
-                    <input type="checkbox" id="autostart-toggle">
-                    <span class="slider"></span>
-                    <span class="label">Auto-start</span>
-                </label>
             </div>
         </header>
 
-        <div class="input-section">
-            <input type="text" id="todo-input" placeholder="Add a new todo..." />
+        <div class="input-section" id="todo-input-section">
+            <div class="input-main">
+                <input type="text" id="todo-input" placeholder="Add a new todo..." />
+                <div class="input-extras">
+                    <select id="priority-select" title="Priority">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                    <input type="date" id="due-date" title="Due date" />
+                </div>
+            </div>
             <button id="add-btn">+</button>
+        </div>
+
+        <div class="focus-section" id="focus-section" style="display: none;">
+            <div class="pomodoro-timer">
+                <h3>🍅 Pomodoro Timer</h3>
+                <div class="timer-display">
+                    <span id="timer-minutes">25</span>:<span id="timer-seconds">00</span>
+                </div>
+                <div class="timer-controls">
+                    <button id="timer-start" class="timer-btn">Start</button>
+                    <button id="timer-pause" class="timer-btn" disabled>Pause</button>
+                    <button id="timer-reset" class="timer-btn">Reset</button>
+                </div>
+                <div class="timer-settings">
+                    <label>Work: <input type="number" id="work-duration" value="25" min="1" max="60"> min</label>
+                    <label>Break: <input type="number" id="break-duration" value="5" min="1" max="30"> min</label>
+                </div>
+            </div>
         </div>
 
         <div class="todos-section">
@@ -41,7 +69,73 @@
 
         <div class="stats">
             <span id="total-count">0 todos</span>
+            <label class="toggle">
+                <input type="checkbox" id="autostart-toggle">
+                <span class="slider"></span>
+                <span class="label">Launch at startup</span>
+            </label>
             <span id="completed-count">0 completed</span>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>How to Use Desktop Todo</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h3>Getting Started</h3>
+                    <p>Add new todos by typing in the input field and clicking the <strong>+</strong> button or pressing Enter.</p>
+                </div>
+                
+                <div class="help-section">
+                    <h3>Todo Types</h3>
+                    <p><strong>Regular:</strong> Standard todos that persist until you delete them</p>
+                    <p><strong>Daily:</strong> Habit tracking todos that reset each day and track streaks</p>
+                </div>
+                
+                <div class="help-section">
+                    <h3>Icon Guide</h3>
+                    <div class="icon-guide">
+                        <div class="icon-item">
+                            <span class="icon">❓</span>
+                            <span class="desc">Show this help guide</span>
+                        </div>
+                        <div class="icon-item">
+                            <span class="icon">💾</span>
+                            <span class="desc">Export all todos to a file</span>
+                        </div>
+                        <div class="icon-item">
+                            <span class="icon">📂</span>
+                            <span class="desc">Import todos from a backup file</span>
+                        </div>
+                        <div class="icon-item">
+                            <span class="icon">🔄</span>
+                            <span class="desc">Create quick backup to home directory</span>
+                        </div>
+                        <div class="icon-item">
+                            <span class="icon">🗒️</span>
+                            <span class="desc">Expand todo to add notes (hover over todo)</span>
+                        </div>
+                        <div class="icon-item">
+                            <span class="icon">🗑️</span>
+                            <span class="desc">Delete todo (hover over todo)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h3>Features</h3>
+                    <p><strong>Auto-start:</strong> Toggle to launch app automatically when your computer starts</p>
+                    <p><strong>Drag to move:</strong> Click and drag the header area to move the window</p>
+                    <p><strong>Resize:</strong> Drag from edges or corners to resize the window</p>
+                    <p><strong>Streaks:</strong> Daily todos show streak badges for consecutive completions</p>
+                    <p><strong>Notes:</strong> Click the expand button on any todo to add detailed notes</p>
+                </div>
+            </div>
         </div>
     </div>
 

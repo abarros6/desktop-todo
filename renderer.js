@@ -3,6 +3,14 @@ let currentType = 'regular';
 let saveTimeout = null;
 let completionHistory = {};
 
+// Timer state
+let timerInterval = null;
+let timerMinutesLeft = 25;
+let timerSecondsLeft = 0;
+let isTimerRunning = false;
+let isBreakTime = false;
+
+
 const todoInput = document.getElementById('todo-input');
 const addBtn = document.getElementById('add-btn');
 const todosList = document.getElementById('todos-list');
@@ -14,6 +22,25 @@ const navTabs = document.querySelectorAll('.nav-tab');
 const exportBtn = document.getElementById('export-btn');
 const importBtn = document.getElementById('import-btn');
 const backupBtn = document.getElementById('backup-btn');
+const helpBtn = document.getElementById('help-btn');
+const helpModal = document.getElementById('help-modal');
+const modalClose = document.querySelector('.modal-close');
+const menuBtn = document.getElementById('menu-btn');
+const dropdownMenu = document.getElementById('dropdown-menu');
+const prioritySelect = document.getElementById('priority-select');
+const dueDateInput = document.getElementById('due-date');
+const todoInputSection = document.getElementById('todo-input-section');
+const focusSection = document.getElementById('focus-section');
+
+// Focus section elements
+const timerMinutes = document.getElementById('timer-minutes');
+const timerSeconds = document.getElementById('timer-seconds');
+const timerStart = document.getElementById('timer-start');
+const timerPause = document.getElementById('timer-pause');
+const timerReset = document.getElementById('timer-reset');
+const workDuration = document.getElementById('work-duration');
+const breakDuration = document.getElementById('break-duration');
+
 
 const todoElementsMap = new Map();
 
@@ -63,7 +90,30 @@ async function loadAutostartStatus() {
 
 function createTodoElement(todo, index) {
     const li = document.createElement('li');
-    li.className = `todo-item ${todo.completed ? 'completed' : ''} ${todo.expanded ? 'expanded' : ''}`;
+    let className = `todo-item ${todo.completed ? 'completed' : ''} ${todo.expanded ? 'expanded' : ''}`;
+    
+    // Add priority class
+    if (todo.priority) {
+        li.setAttribute('data-priority', todo.priority);
+    }
+    
+    // Add due date classes
+    if (todo.dueDate) {
+        const dueDate = new Date(todo.dueDate);
+        const today = new Date();
+        const todayString = today.toDateString();
+        const dueDateString = dueDate.toDateString();
+        
+        if (dueDate < today && dueDateString !== todayString) {
+            className += ' overdue';
+        } else if (dueDateString === todayString) {
+            className += ' due-today';
+        } else if (dueDate - today <= 3 * 24 * 60 * 60 * 1000) {
+            className += ' due-soon';
+        }
+    }
+    
+    li.className = className;
     li.dataset.todoId = todo.id;
     
     const mainRow = document.createElement('div');
@@ -105,8 +155,42 @@ function createTodoElement(todo, index) {
     textContainer.appendChild(text);
     textContainer.appendChild(textInput);
     
+    // Add priority badge
+    if (todo.priority && currentType !== 'daily') {
+        const priorityBadge = document.createElement('span');
+        priorityBadge.className = `priority-badge ${todo.priority}`;
+        priorityBadge.textContent = todo.priority.toUpperCase();
+        li.appendChild(priorityBadge);
+    }
+    
+    // Add due date badge
+    if (todo.dueDate && currentType !== 'daily') {
+        const dueDateBadge = document.createElement('span');
+        dueDateBadge.className = 'due-date-badge';
+        const dueDate = new Date(todo.dueDate);
+        const today = new Date();
+        const todayString = today.toDateString();
+        const dueDateString = dueDate.toDateString();
+        
+        if (dueDate < today && dueDateString !== todayString) {
+            dueDateBadge.className += ' overdue';
+            dueDateBadge.textContent = 'OVERDUE';
+        } else if (dueDateString === todayString) {
+            dueDateBadge.className += ' due-today';
+            dueDateBadge.textContent = 'DUE TODAY';
+        } else if (dueDate - today <= 3 * 24 * 60 * 60 * 1000) {
+            dueDateBadge.className += ' due-soon';
+            dueDateBadge.textContent = dueDate.toLocaleDateString();
+        } else {
+            dueDateBadge.textContent = dueDate.toLocaleDateString();
+        }
+        
+        li.appendChild(dueDateBadge);
+    }
+    
     const controls = document.createElement('div');
     controls.className = 'todo-controls';
+    
     
     const expandBtn = document.createElement('button');
     expandBtn.className = 'expand-btn';
@@ -243,7 +327,9 @@ function addTodo() {
         id: Date.now(),
         createdAt: new Date().toISOString(),
         notes: '',
-        expanded: false
+        expanded: false,
+        priority: prioritySelect.value,
+        dueDate: dueDateInput.value || null
     };
     
     if (currentType === 'daily') {
@@ -254,6 +340,8 @@ function addTodo() {
     
     todos.unshift(newTodo);
     todoInput.value = '';
+    dueDateInput.value = '';
+    prioritySelect.value = 'medium';
     
     renderTodosOptimized();
     updateStats();
@@ -413,14 +501,22 @@ function switchType(type) {
     todosList.innerHTML = '';
     
     currentType = type;
-    appTitle.textContent = type === 'daily' ? 'Daily Todos' : 'Todo List';
-    todoInput.placeholder = type === 'daily' ? 'Add a daily todo...' : 'Add a new todo...';
+    
+    if (type === 'focus') {
+        appTitle.textContent = 'Focus & Productivity';
+        todoInputSection.style.display = 'none';
+        focusSection.style.display = 'flex';
+    } else {
+        appTitle.textContent = type === 'daily' ? 'Daily Todos' : 'Todo List';
+        todoInput.placeholder = type === 'daily' ? 'Add a daily todo...' : 'Add a new todo...';
+        todoInputSection.style.display = 'flex';
+        focusSection.style.display = 'none';
+        loadTodos(type);
+    }
     
     navTabs.forEach(tab => {
         tab.classList.toggle('active', tab.dataset.type === type);
     });
-    
-    loadTodos(type);
 }
 
 addBtn.addEventListener('click', addTodo);
@@ -449,36 +545,37 @@ navTabs.forEach(tab => {
 // Backup functionality
 exportBtn.addEventListener('click', async () => {
     try {
+        dropdownMenu.classList.remove('show');
         exportBtn.disabled = true;
-        exportBtn.textContent = '⏳';
+        exportBtn.innerHTML = '💾 ⏳';
         
         const result = await window.electronAPI.exportData();
         
         if (result.canceled) {
-            exportBtn.textContent = '💾';
+            exportBtn.innerHTML = '💾 Export';
             exportBtn.disabled = false;
             return;
         }
         
         if (result.success) {
-            exportBtn.textContent = '✅';
+            exportBtn.innerHTML = '💾 ✅';
             setTimeout(() => {
-                exportBtn.textContent = '💾';
+                exportBtn.innerHTML = '💾 Export';
                 exportBtn.disabled = false;
             }, 2000);
         } else {
-            exportBtn.textContent = '❌';
+            exportBtn.innerHTML = '💾 ❌';
             console.error('Export failed:', result.error);
             setTimeout(() => {
-                exportBtn.textContent = '💾';
+                exportBtn.innerHTML = '💾 Export';
                 exportBtn.disabled = false;
             }, 2000);
         }
     } catch (error) {
         console.error('Export error:', error);
-        exportBtn.textContent = '❌';
+        exportBtn.innerHTML = '💾 ❌';
         setTimeout(() => {
-            exportBtn.textContent = '💾';
+            exportBtn.innerHTML = '💾 Export';
             exportBtn.disabled = false;
         }, 2000);
     }
@@ -486,38 +583,39 @@ exportBtn.addEventListener('click', async () => {
 
 importBtn.addEventListener('click', async () => {
     try {
+        dropdownMenu.classList.remove('show');
         importBtn.disabled = true;
-        importBtn.textContent = '⏳';
+        importBtn.innerHTML = '📂 ⏳';
         
         const result = await window.electronAPI.importData();
         
         if (result.canceled) {
-            importBtn.textContent = '📂';
+            importBtn.innerHTML = '📂 Import';
             importBtn.disabled = false;
             return;
         }
         
         if (result.success) {
-            importBtn.textContent = '✅';
+            importBtn.innerHTML = '📂 ✅';
             // Reload todos after import
             loadTodos(currentType);
             setTimeout(() => {
-                importBtn.textContent = '📂';
+                importBtn.innerHTML = '📂 Import';
                 importBtn.disabled = false;
             }, 2000);
         } else {
-            importBtn.textContent = '❌';
+            importBtn.innerHTML = '📂 ❌';
             console.error('Import failed:', result.error);
             setTimeout(() => {
-                importBtn.textContent = '📂';
+                importBtn.innerHTML = '📂 Import';
                 importBtn.disabled = false;
             }, 2000);
         }
     } catch (error) {
         console.error('Import error:', error);
-        importBtn.textContent = '❌';
+        importBtn.innerHTML = '📂 ❌';
         setTimeout(() => {
-            importBtn.textContent = '📂';
+            importBtn.innerHTML = '📂 Import';
             importBtn.disabled = false;
         }, 2000);
     }
@@ -525,36 +623,149 @@ importBtn.addEventListener('click', async () => {
 
 backupBtn.addEventListener('click', async () => {
     try {
+        dropdownMenu.classList.remove('show');
         backupBtn.disabled = true;
-        backupBtn.textContent = '⏳';
+        backupBtn.innerHTML = '🔄 ⏳';
         
         const result = await window.electronAPI.createBackup();
         
         if (result.success) {
-            backupBtn.textContent = '✅';
+            backupBtn.innerHTML = '🔄 ✅';
             setTimeout(() => {
-                backupBtn.textContent = '🔄';
+                backupBtn.innerHTML = '🔄 Backup';
                 backupBtn.disabled = false;
             }, 2000);
         } else {
-            backupBtn.textContent = '❌';
+            backupBtn.innerHTML = '🔄 ❌';
             console.error('Backup failed:', result.error);
             setTimeout(() => {
-                backupBtn.textContent = '🔄';
+                backupBtn.innerHTML = '🔄 Backup';
                 backupBtn.disabled = false;
             }, 2000);
         }
     } catch (error) {
         console.error('Backup error:', error);
-        backupBtn.textContent = '❌';
+        backupBtn.innerHTML = '🔄 ❌';
         setTimeout(() => {
-            backupBtn.textContent = '🔄';
+            backupBtn.innerHTML = '🔄 Backup';
             backupBtn.disabled = false;
         }, 2000);
     }
 });
 
+// Dropdown Menu functionality
+menuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdownMenu.classList.toggle('show');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', () => {
+    dropdownMenu.classList.remove('show');
+});
+
+// Prevent dropdown from closing when clicking inside it
+dropdownMenu.addEventListener('click', (e) => {
+    e.stopPropagation();
+});
+
+// Help Modal functionality
+helpBtn.addEventListener('click', () => {
+    helpModal.style.display = 'block';
+    dropdownMenu.classList.remove('show');
+});
+
+modalClose.addEventListener('click', () => {
+    helpModal.style.display = 'none';
+});
+
+helpModal.addEventListener('click', (e) => {
+    if (e.target === helpModal) {
+        helpModal.style.display = 'none';
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && helpModal.style.display === 'block') {
+        helpModal.style.display = 'none';
+    }
+});
+
+// Focus Tab Functionality
+
+// Pomodoro Timer
+function updateTimerDisplay() {
+    timerMinutes.textContent = timerMinutesLeft.toString().padStart(2, '0');
+    timerSeconds.textContent = timerSecondsLeft.toString().padStart(2, '0');
+}
+
+function startTimer() {
+    if (isTimerRunning) return;
+    
+    isTimerRunning = true;
+    timerStart.disabled = true;
+    timerPause.disabled = false;
+    
+    timerInterval = setInterval(() => {
+        if (timerSecondsLeft === 0) {
+            if (timerMinutesLeft === 0) {
+                // Timer finished
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                timerStart.disabled = false;
+                timerPause.disabled = true;
+                
+                // Switch between work and break
+                if (isBreakTime) {
+                    timerMinutesLeft = parseInt(workDuration.value);
+                    isBreakTime = false;
+                    alert('Break finished! Time to work!');
+                } else {
+                    timerMinutesLeft = parseInt(breakDuration.value);
+                    isBreakTime = true;
+                    alert('Work session finished! Time for a break!');
+                }
+                timerSecondsLeft = 0;
+                updateTimerDisplay();
+                return;
+            }
+            timerMinutesLeft--;
+            timerSecondsLeft = 59;
+        } else {
+            timerSecondsLeft--;
+        }
+        updateTimerDisplay();
+    }, 1000);
+}
+
+function pauseTimer() {
+    if (!isTimerRunning) return;
+    
+    clearInterval(timerInterval);
+    isTimerRunning = false;
+    timerStart.disabled = false;
+    timerPause.disabled = true;
+}
+
+function resetTimer() {
+    clearInterval(timerInterval);
+    isTimerRunning = false;
+    isBreakTime = false;
+    timerMinutesLeft = parseInt(workDuration.value);
+    timerSecondsLeft = 0;
+    timerStart.disabled = false;
+    timerPause.disabled = true;
+    updateTimerDisplay();
+}
+
+// Event Listeners for Focus Tab
+timerStart.addEventListener('click', startTimer);
+timerPause.addEventListener('click', pauseTimer);
+timerReset.addEventListener('click', resetTimer);
+
 document.addEventListener('DOMContentLoaded', () => {
     loadTodos();
     loadAutostartStatus();
+    updateTimerDisplay();
 });

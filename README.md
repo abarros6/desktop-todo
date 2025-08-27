@@ -1,16 +1,38 @@
 # Desktop Todo
 
-A beautiful, modern desktop todo application built with Electron. Features daily habit tracking with streaks, backup functionality, and a clean glassmorphism UI.
+A beautiful, modern desktop todo application built with Electron. Features daily habit tracking with streaks, priority levels, due dates, Pomodoro timer, and a clean glassmorphism UI.
 
 ## ✨ Features
 
-- **Dual Todo Types**: Regular todos and daily habits with streak tracking
-- **Rich Todo Management**: Inline editing, expandable notes, and completion states
-- **Streak Tracking**: Visual streak indicators (🔥3) for daily habit consistency
-- **Data Backup**: Export, import, and quick backup functionality
-- **Modern UI**: Glassmorphism design with smooth animations
-- **Auto-launch**: Optional system startup integration
-- **Data Persistence**: Your todos survive app updates and reinstalls
+### 📋 **Smart Todo Management**
+- **Three Tab System**: Regular, Daily, and Focus tabs for organized productivity
+- **Priority Levels**: High (red), Medium (yellow), Low (green) with color-coded borders
+- **Due Dates**: Visual indicators for overdue, due today, and upcoming deadlines
+- **Rich Editing**: Inline editing, expandable notes, and completion states
+- **Movable & Resizable**: Drag header to move window, resize from edges
+
+### 🔥 **Daily Habit Tracking** 
+- **Streak System**: Visual streak indicators (🔥3) for daily habit consistency
+- **Auto-Reset**: Daily todos reset each day but maintain completion history
+- **Habit Building**: Perfect for building consistent daily routines
+
+### 🍅 **Focus & Productivity**
+- **Pomodoro Timer**: 25-minute work sessions with 5-minute breaks
+- **Customizable Durations**: Adjust work and break periods to your preference
+- **Audio Alerts**: Notifications when work/break sessions complete
+- **Centered Design**: Clean, distraction-free timer interface
+
+### 💾 **Data Management**
+- **Dropdown Menu**: Clean ⋯ menu with Export, Import, Backup, and Help
+- **Export/Import**: Save and restore your todos from any location
+- **Quick Backup**: Instant backup to home directory
+- **Help System**: Built-in guide explaining all features and icons
+
+### 🎨 **Modern Interface**
+- **Glassmorphism Design**: Beautiful blur effects and gradients
+- **Responsive Layout**: Fits any window size without content overflow
+- **Smooth Animations**: Polished transitions and hover effects
+- **Launch at Startup**: Convenient toggle in bottom status bar
 
 ## 🚀 Installation
 
@@ -39,20 +61,35 @@ npm run build-linux  # Linux
 
 ## 🎯 Usage
 
-### Regular Todos
-- Add tasks that persist until manually completed or deleted
-- Double-click to edit inline
-- Click 📄/📝 icon to add/view notes
+### Getting Started
+1. **Window Controls**: Drag the header area to move the window, resize from edges/corners
+2. **Menu Access**: Click the ⋯ button in the top-right for Export, Import, Backup, and Help
+3. **Help Guide**: Click ❓ Help for detailed instructions on all features
 
-### Daily Todos  
-- Reset each day but maintain completion history
-- Build streaks by completing daily habits consistently
-- Visual 🔥 badges show current streak count
+### Regular Todos Tab
+- **Add Todos**: Type task, select priority level, set due date (optional)
+- **Priority Levels**: Choose High/Medium/Low for color-coded organization
+- **Due Dates**: Set deadlines with visual indicators (overdue=red, today=yellow, soon=blue)
+- **Edit**: Double-click text to edit inline
+- **Notes**: Click 📄/📝 to expand and add detailed notes
 
-### Backup & Export
-- **💾 Export**: Save todos to a file anywhere
-- **📂 Import**: Restore from backup file  
-- **🔄 Quick Backup**: Instant backup to home folder
+### Daily Todos Tab  
+- **Habit Tracking**: Add daily routines that reset each day
+- **Build Streaks**: Complete daily habits consistently to build streaks
+- **Visual Feedback**: 🔥 badges show current streak count
+- **History**: Completion history maintained even after daily reset
+
+### Focus Tab
+- **Pomodoro Timer**: Click Start for focused 25-minute work sessions
+- **Break Reminders**: Automatic 5-minute break alerts between sessions
+- **Customization**: Adjust work and break durations in settings
+- **Audio Alerts**: Notifications when sessions complete
+
+### Menu Functions
+- **❓ Help**: Complete guide to all features and icons
+- **💾 Export**: Save all todos to a file anywhere you choose
+- **📂 Import**: Restore todos from a backup file
+- **🔄 Backup**: Quick backup to your home directory
 
 ## 🛠️ Development
 
